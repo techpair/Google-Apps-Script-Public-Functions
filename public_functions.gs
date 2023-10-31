@@ -153,6 +153,18 @@ function protectRange(sheet, startRow, startColumn, numRows, numColumns) {
   protection.removeEditors(protection.getEditors());
   protection.addEditor(Session.getActiveUser());
   protection.setWarningOnly(true);
+
+function importExcelData() {
+  var excelFile = DriveApp.getFilesByName("Your Excel File Name.xlsx").next();
+  var fileId = excelFile.getId();
+  var blob = DriveApp.getFileById(fileId).getBlob();
+  var data = Utilities.parseCsv(blob.getDataAsString());
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  
+  sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+}
+
 }
 
 
