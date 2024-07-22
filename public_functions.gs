@@ -203,3 +203,46 @@ function syncCalendar() {
     //var eventDesc = events[eventCtr].getDescription(); 
   } 
 }
+
+function extractEmailsToSheet() {
+  // Define the search query for the emails you want to extract
+  var searchQuery = 'from:example@example.com subject:Enquiry Form'; // Update with your specific search criteria
+  
+  // Get the active spreadsheet and the active sheet
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  
+  // Clear any existing content in the sheet
+  sheet.clear();
+  
+  // Set the headers for the sheet
+  var headers = ["Date", "From", "Subject", "Body"];
+  sheet.appendRow(headers);
+  
+  // Search for the emails matching the query
+  var threads = GmailApp.search(searchQuery);
+  var row = 2;
+  
+  // Loop through each email thread
+  for (var i = 0; i < threads.length; i++) {
+    var messages = threads[i].getMessages();
+    
+    // Loop through each message in the thread
+    for (var j = 0; j < messages.length; j++) {
+      var message = messages[j];
+      var date = message.getDate();
+      var from = message.getFrom();
+      var subject = message.getSubject();
+      var body = message.getPlainBody();
+      
+      // Append the message details to the sheet
+      sheet.getRange(row, 1).setValue(date);
+      sheet.getRange(row, 2).setValue(from);
+      sheet.getRange(row, 3).setValue(subject);
+      sheet.getRange(row, 4).setValue(body);
+      
+      row++;
+    }
+  }
+  
+  Logger.log("Emails have been successfully extracted to the sheet.");
+}
