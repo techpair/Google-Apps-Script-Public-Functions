@@ -246,3 +246,88 @@ function extractEmailsToSheet() {
   
   Logger.log("Emails have been successfully extracted to the sheet.");
 }
+
+function processEmails() {
+  // Get Gmail threads with label "Amazon Order Confirmation" (replace if needed)
+  const threads = GmailApp.search("label:Amazon Order Confirmation", GmailApp.SearchOperators.HAS);
+  
+  // Loop through each thread
+  for (const thread of threads) {
+    const messages = thread.getMessages();
+    const latestMessage = messages[messages.length - 1]; // Assuming latest is confirmation email
+    const body = latestMessage.getBody();
+    
+    // Extract data using regular expressions (adjust patterns as needed)
+    const account = extractAccount(body);
+    const orderDate = extractDate(body);
+    const deliveryDate = extractDeliveryDate(body);
+    const productTitle = extractProductTitle(body);
+    const orderId = extractOrderId(body);
+    const asin = extractAsin(body);
+    const itemTotal = extractItemTotal(body);
+    const quantity = extractQuantity(body);
+    const singlePrice = extractSinglePrice(body);
+    
+    // Add extracted data to a new row in the sheet
+    const sheet = SpreadsheetApp.getActiveSheet();
+    const dataRow = sheet.appendRow([account, orderDate, deliveryDate, productTitle, orderId, asin, itemTotal, quantity, singlePrice]);
+    
+    // Mark thread as read (optional)
+    thread.markRead();
+  }
+}
+
+// Helper functions to extract specific data using regular expressions
+function extractAccount(body) {
+  const pattern = /Sent to (.*?)@/;
+  const match = pattern.exec(body);
+  return match ? match[1] === "PERSONAL" ? "PERSONAL" : "PERSONAL2" : "";
+}
+
+function extractDate(body) {
+  const pattern = /\d{2}\/\d{2}\/\d{4}/;
+  const match = pattern.exec(body);
+  return match ? new Date(match[0]) : "";
+}
+
+function extractDeliveryDate(body) {
+  const pattern = /Your guaranteed delivery date is: (.*?)\./;
+  const match = pattern.exec(body);
+  return match ? match[1] : "";
+}
+
+function extractProductTitle(body) {
+  const pattern = /<a.*?title="(.*?)"/; // Capture title attribute from product link
+  const match = pattern.exec(body);
+  return match ? match[1] : "";
+}
+
+function extractOrderId(body) {
+  const pattern = /Order # (.*?)\b/;
+  const match = pattern.exec(body);
+  return match ? match[1] : "";
+}
+
+function extractAsin(body) {
+  const pattern = /dp\/(.*?)\//; // Capture ASIN from product link
+  const match = pattern.exec(body);
+  return match ? match[1] : "";
+}
+
+function extractItemTotal(body) {
+  // Implement your logic here based on how item total is presented in the email
+  // This might involve finding a specific phrase or using calculations
+  return ""; // Replace with your implementation
+}
+
+function extractQuantity(body) {
+  const pattern = /\d+ (?:item|unit)/; // Look for quantity followed by "item" or "unit"
+  const match = pattern.exec(body);
+  return match ? parseInt(match[0]) : 1; // Assuming quantity 1 by default
+}
+
+function extractSinglePrice(body) {
+  // Implement your logic here based on how single price is presented in the email
+  // This might involve finding a specific currency symbol and price format
+  return ""; // Replace with your implementation
+}
